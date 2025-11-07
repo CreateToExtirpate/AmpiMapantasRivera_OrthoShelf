@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" th:href="@{/image/ORTHOSHELF_WHITE.png}" type="image/png">
+    <title>OrthoShelf | Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .navbar-brand img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .modal-dialog-end {
+            position: fixed;
+            right: 0;
+            top: 0;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Modal content styling */
+        .modal-content {
+            margin-top: 2.5vh;
+            height: 95vh;
+            border-radius: 20px 0 0 20px;
+            /* CHANGED: Rounded left corners only */
+            border: none;
+        }
+
+        /* Modal header styling */
+        .modal-header {
+            border-bottom: none;
+            /* CHANGED: Remove bottom border */
+            padding: 40px 40px 20px 40px;
+            /* CHANGED: Increased padding */
+        }
+
+        .modal-title {
+            font-size: 32px;
+            /* CHANGED: Larger title */
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        /* Modal body styling */
+        .modal-body {
+            padding: 20px 40px;
+            /* CHANGED: Increased horizontal padding */
+            overflow-y: auto;
+        }
+
+        /* Form labels styling */
+        .modal-body label {
+            display: block;
+            /* CHANGED: Make labels block level */
+            font-size: 18px;
+            /* CHANGED: Larger font */
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            margin-top: 20px;
+        }
+
+        /* Form inputs styling */
+        .modal-body input[type="text"],
+        .modal-body input[type="number"] {
+            width: 100%;
+            /* CHANGED: Full width */
+            padding: 12px 16px;
+            border: 2px solid var(--light-blue);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .modal-body input[type="text"]:focus,
+        .modal-body input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+        }
+
+        /* Category radio buttons styling */
+        .modal-body input[type="radio"] {
+            display: none;
+            /* CHANGED: Hide default radio */
+        }
+
+        .modal-body input[type="radio"]+label {
+            display: inline-block;
+            /* CHANGED: Inline for radio labels */
+            padding: 12px 40px;
+            background: var(--cream);
+            color: var(--primary-dark);
+            border-radius: 25px;
+            margin-right: 15px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .modal-body input[type="radio"]:checked+label {
+            background: var(--primary-blue);
+            /* CHANGED: Blue when selected */
+            color: white;
+        }
+
+        /* Price and Stock inline layout */
+        .price-stock-row {
+            /* NEW: Container for price and stock */
+            display: flex;
+            gap: 20px;
+        }
+
+        .price-stock-row>div {
+            /* NEW: Each field takes half */
+            flex: 1;
+        }
+
+        /* Textarea styling */
+        .modal-body textarea {
+            width: 100%;
+            /* CHANGED: Full width */
+            min-height: 5vh;
+            /* CHANGED: Taller textarea */
+            padding: 12px 16px;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 12px;
+            font-size: 16px;
+            resize: vertical;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .modal-body textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(51, 189, 210, 0.1);
+        }
+
+        /* Modal footer styling */
+        .modal-footer {
+            border-top: none;
+            /* CHANGED: Remove top border */
+            padding: 20px 40px 40px 40px;
+            /* CHANGED: Increased padding */
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        /* Cancel button styling */
+        .modal-footer .btn-secondary {
+            background: var(--brown);
+            /* CHANGED: Brown background */
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Next/Submit button styling */
+        .modal-footer .btn-primary {
+            background: var(--accent-cyan);
+            /* CHANGED: Cyan background */
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Back button styling */
+        .modal-footer .btn-delete {
+            padding: 12px 35px;
+            /* CHANGED: Consistent padding */
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        /* Invalid input styling */
+        .modal-body input.invalid {
+            border-color: #dc3545;
+            /* CHANGED: Red border for invalid */
+        }
+
+        /* Category section styling */
+        .category-section {
+            /* NEW: Container for category */
+            margin: 20px 0;
+        }
+
+        .category-section>p {
+            /* NEW: Category label */
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+
+        /* Slide-in animation for Bootstrap modal */
+        .modal.fade .modal-dialog {
+            transform: translateX(100%);
+            transition: transform 0.4s ease-out;
+        }
+
+        .modal.show .modal-dialog {
+            transform: translateX(0);
+        }
+
+        /*Add Instrument Modals*/
+        .hide-me {
+            display: none;
+        }
+
+        .modal-body .add-tab,
+        .modal-body .edit-tab {
+            display: none;
+        }
+
+        .modal-body .types-section input[type="radio"]+label {
+            padding: 12px 30px;
+        }
+
+        .modal-body input[type="radio"].invalid+label {
+            background-color: indianred;
+        }
+
+        #use-type-box,
+        #sizes-box {
+            display: flex;
+            flex-direction: row;
+        }
+
+        :root {
+            --primary-dark: #213555;
+            --primary-blue: #1d5d9b;
+            --secondary-blue: #258eab;
+            --light-blue: #cde4ea;
+            --accent-cyan: #33bdd2;
+            --dark-blue: #165074;
+            --brown: #997e6a;
+            --cream: #f6f4f0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f6f4f0 0%, #cde4ea 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--primary-dark);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 28px;
+            font-weight: 700;
+            color: white !important;
+            letter-spacing: 1px;
+        }
+
+        .navbar .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .navbar .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+            transform: translateY(-2px);
+        }
+
+        .navbar .btn-orders {
+            background: #f6f4f0;
+            color: #997e6a;
+            border: 2px solid #997e6a;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .navbar .btn-orders:hover {
+            background: #997e6a;
+            color: #f6f4f0;
+            border-color: #997e6a;
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .page-header h1 {
+            color: var(--primary-dark);
+            font-weight: 700;
+            margin: 0;
+            font-size: 36px;
+        }
+
+        .page-header p {
+            color: var(--brown);
+            margin: 10px 0 0 0;
+            font-size: 16px;
+        }
+
+        .filter-tabs {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-tabs-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .filter-tabs .nav-pills {
+            margin: 0;
+            flex-wrap: nowrap;
+        }
+
+        .search-container {
+            position: relative;
+            min-width: 220px;
+            flex-shrink: 0;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            fill: var(--brown);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .search-input {
+            padding: 10px 14px 10px 38px;
+            border: 2px solid var(--light-blue);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: var(--primary-dark);
+            height: 44px;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 0.25rem rgba(51, 189, 210, 0.15);
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--brown);
+            opacity: 0.6;
+        }
+
+        .nav-pills .nav-link {
+            color: var(--primary-dark);
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            border: 2px solid transparent;
+            white-space: nowrap;
+        }
+
+        .nav-pills .nav-link:hover {
+            background: var(--light-blue);
+            color: var(--primary-blue);
+        }
+
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(29, 93, 155, 0.3);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-add-new {
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--secondary-blue) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(51, 189, 210, 0.3);
+        }
+
+        .btn-add-new:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(51, 189, 210, 0.4);
+            color: white;
+        }
+
+        .table {
+            margin-top: 20px;
+        }
+
+        .table thead {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: white;
+        }
+
+        .table thead th {
+            border: none;
+            padding: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 14px;
+        }
+
+        .table thead th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        .table thead th:last-child {
+            border-top-right-radius: 10px;
+        }
+
+        .table tbody tr {
+            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--light-blue);
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(205, 228, 234, 0.2);
+            transform: scale(1.01);
+        }
+
+        .table tbody td {
+            padding: 16px;
+            vertical-align: middle;
+            color: var(--primary-dark);
+        }
+
+        .badge-stock {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .badge-high {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+        }
+
+        .badge-medium {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ffc107;
+        }
+
+        .badge-low {
+            background: rgba(220, 53, 69, 0.15);
+            color: #dc3545;
+        }
+
+        .btn-action {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .btn-edit {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+        }
+
+        .btn-edit:hover {
+            background: var(--dark-blue);
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .tab-content {
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Style for all readonly inputs */
+        .modal-body input[readonly] {
+            background: var(--light-blue);
+            /* Light blue background */
+            color: var(--primary-dark);
+            border: 2px solid var(--light-blue);
+            cursor: not-allowed;
+            /* Show not-allowed cursor */
+            font-weight: 600;
+            opacity: 0.9;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        .modal-body input[readonly]:focus {
+            border-color: var(--light-blue);
+            box-shadow: none;
+            outline: none;
+        }
+
+        .price-stock-row input[readonly] {
+            background: var(--light-blue);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="#">
+                <img th:src="@{/image/ORTHOSHELF_WHITE.png}" alt="Logo">
+                OrthoShelf
+            </a>
+            <div class="d-flex gap-2">
+                <button class="btn btn-orders">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2"
+                        viewBox="0 0 16 16">
+                        <path
+                            d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z" />
+                    </svg>
+                    Orders
+                </button>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2"
+                            viewBox="0 0 16 16">
+                            <path fill-rule="evenodd"
+                                d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z" />
+                            <path fill-rule="evenodd"
+                                d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z" />
+                        </svg>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1>Instrument Inventory</h1>
+                    <p>Manage and track all orthopedic instruments</p>
+                </div>
+                <button id="add-instrument-btn" class="btn btn-add-new" data-bs-toggle="modal"
+                    data-bs-target="#instrumentModal" onclick="addInstrumentModal()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2"
+                        viewBox="0 0 16 16">
+                        <path
+                            d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
+                    </svg>
+                    Add New Instrument
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <div class="filter-tabs-wrapper">
+                <ul class="nav nav-pills flex-grow-1" id="instrumentTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="all-tab" data-bs-toggle="pill" data-bs-target="#all"
+                            type="button" role="tab">
+                            All Instruments
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="borrowable-tab" data-bs-toggle="pill" data-bs-target="#borrowable"
+                            type="button" role="tab">
+                            Borrowable
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="consumable-tab" data-bs-toggle="pill" data-bs-target="#consumable"
+                            type="button" role="tab">
+                            Consumable
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="cutting-tab" data-bs-toggle="pill" data-bs-target="#cutting"
+                            type="button" role="tab">
+                            Cutting
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="grasping-tab" data-bs-toggle="pill" data-bs-target="#grasping"
+                            type="button" role="tab">
+                            Grasping
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="retractor-tab" data-bs-toggle="pill" data-bs-target="#retractor"
+                            type="button" role="tab">
+                            Retractor
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="impacting-tab" data-bs-toggle="pill" data-bs-target="#impacting"
+                            type="button" role="tab">
+                            Impacting
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="wire-tab" data-bs-toggle="pill" data-bs-target="#wire"
+                            type="button" role="tab">
+                            Wire
+                        </button>
+                    </li>
+                </ul>
+                <div class="search-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
+                        class="search-icon" viewBox="0 0 16 16">
+                        <path
+                            d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                    </svg>
+                    <input type="text" id="searchInput" class="form-control search-input"
+                        placeholder="Search instruments...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <div class="tab-content" id="instrumentTabsContent">
+                <!-- All Instruments Tab -->
+                <div class="tab-pane fade show active" id="all" role="tabpanel">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Borrowed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="instrument : ${instruments}">
+                                <td th:text="${instrument.id}"></td>
+                                <td th:text="${instrument.name}"></td>
+                                <td th:text="'₱' + ${instrument.price}"></td>
+                                <td>
+                                    <span class="badge-stock"
+                                        th:classappend="${instrument.stock > 10} ? 'badge-high' : (${instrument.stock > 5} ? 'badge-medium' : 'badge-low')"
+                                        th:text="${instrument.stock}"></span>
+                                </td>
+                                <td th:text="${instrument.category}"></td>
+                                <td th:text="${instrument.subType}"></td>
+                                <td th:text="${instrument.borrowCount}"></td>
+                                <td style="white-space:nowrap">
+                                    <a class="btn btn-action btn-edit" data-bs-toggle="modal"
+                                        data-bs-target="#instrumentModal" th:data-id="${instrument.id}"
+                                        th:data-cat="${instrument.category}"
+                                        onclick="editInstrumentFromAll(this)">Edit</a>
+                                    <a class="btn btn-action btn-delete" th:data-del="${instrument.id}"
+                                        onclick="deleteFromAll(this)">Delete</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Borrowable Tab -->
+                <div class="tab-pane fade" id="borrowable" role="tabpanel">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Borrowed</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="borrowable-content"></tbody>
+                    </table>
+                </div>
+
+                <!-- Consumable Tab -->
+                <div class="tab-pane fade" id="consumable" role="tabpanel">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consumable-content"></tbody>
+                    </table>
+                </div>
+
+                <!-- Cutting Tab -->
+                <div class="tab-pane fade" id="cutting" role="tabpanel">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Sub-Type</th>
+                                <th>Tool Type</th>
+                                <th>Size</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Borrowed</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cutting-content"></tbody>
+                    </table>
+                </div>
+
+                <!-- Grasping Tab -->
+                <div class="tab-pane fade" id="grasping" role="tabpanel">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Sub-Type</th>
+                                <th>Size</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Borrowed</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grasping-content"></tbody>
+                    </table>
+                </div>
+
+                <!-- Retractor Tab -->
+                <div class="tab-pane fade" id="retractor" role="tabpanel">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Sub-Type</th>
+                                <th>Tool Type</th>
+                                <th>Size</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Borrowed</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="retractor-content"></tbody>
+                    </table>
+                </div>
+
+                <!-- Impacting Tab -->
+                <div class="tab-pane fade" id="impacting" role="tabpanel">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Sub-Type</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Borrowed</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="impacting-content"></tbody>
+                    </table>
+                </div>
+
+                <!-- Wire Tab -->
+                <div class="tab-pane fade" id="wire" role="tabpanel">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Sub-Type</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Borrowed</th>
+                                <th>Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wire-content"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="instrumentModal" tabindex="-1" aria-labelledby="instrumentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-slide modal-dialog-end">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="instrumentModalLabel"></h5>
+                </div>
+
+                <div class="modal-body">
+
+                    <!--INSTRUMENT INFORMATION-->
+                    <div class="add-tab">
+                        <label for="instrument-name">Name:</label>
+                        <input type="text" id="instrument-name">
+
+
+                        <div class="category-section">
+                            <p>Category:</p>
+                            <input type="radio" name="instrument_category" id="radio-borrowable" value="BORROWABLE"
+                                onclick="typeOptions()">
+                            <label for="radio-borrowable">Borrowable</label>
+                            <input type="radio" name="instrument_category" id="radio-consumable" value="CONSUMABLE"
+                                onclick="typeOptions()">
+                            <label for="radio-consumable">Consumable</label>
+                        </div>
+
+                        <!-- Instrument Types -->
+                        <div id="type-options" class="types-section">
+                            <label id="typeLabel">Instrument Type:</label>
+                            <div id="borrowable-types">
+                                <input type="radio" name="instrument_type" id="radio-cutting" value="CUTTING"
+                                    onclick="subTypeOptions('cutting')">
+                                <label for="radio-cutting">Cutting</label>
+                                <input type="radio" name="instrument_type" id="radio-grasping" value="GRASPING"
+                                    onclick="subTypeOptions('grasping')">
+                                <label for="radio-grasping">Grasping</label>
+                                <input type="radio" name="instrument_type" id="radio-retractor" value="RETRACTOR"
+                                    onclick="subTypeOptions('retractor')">
+                                <label for="radio-retractor">Retractor</label>
+                                <input type="radio" name="instrument_type" id="radio-impacting" value="IMPACTING"
+                                    onclick="subTypeOptions('impacting')">
+                                <label for="radio-impacting">Impacting</label>
+                                <input type="radio" name="instrument_type" id="radio-wire" value="WIRE"
+                                    onclick="subTypeOptions('wire')">
+                                <label for="radio-wire">Wire</label>
+                            </div>
+                            <div id="consumable-types">
+                                <input type="radio" name="instrument_type" id="radio-electrode" value="ECELECTRODE"
+                                    onclick="subTypeOptions('no')">
+                                <label for="radio-electrode">Electric Cautery Electrode</label>
+                                <input type="radio" name="instrument_type" id="radio-suction" value="SUCTIONTUBING"
+                                    onclick="subTypeOptions('no')">
+                                <label for="radio-suction">Suction Tubing</label>
+                                <input type="radio" name="instrument_type" id="radio-gauzepad" value="GAUZEPAD"
+                                    onclick="subTypeOptions('no-gauzepad')">
+                                <label for="radio-gauzepad">Gauze Pad</label>
+                            </div>
+                        </div>
+
+                        <div class="price-stock-row">
+                            <div>
+                                <label for="instrument-price">Price:</label>
+                                <input type="number" id="instrument-price" step="0.01" min="0" />
+                            </div>
+                            <div>
+                                <label for="instrument-stock">Stock:</label>
+                                <input type="number" id="instrument-stock">
+                            </div>
+                        </div>
+
+                        <label for="instrument-desc">Description:</label>
+                        <textarea id="instrument-desc" maxlength="500"></textarea>
+                    </div>
+
+                    <!--INSTRUMENT SUBTYPE, USETYPE, AND SIZE-->
+                    <div class="add-tab">
+                        <div id="sub-types-section">
+                            <label id="sub-type-label">Sub-Type:</label>
+
+                            <div id="cutting-subtypes" class="hide-me">
+                                <input type="radio" name="instrument_subtype" id="radio-blade" value="BLADEHOLDER"
+                                    onclick="useTypeOptions('blade')"><label for="radio-blade">Blade Holder</label>
+                                <input type="radio" name="instrument_subtype" id="radio-scissors" value="SCISSORS"
+                                    onclick="useTypeOptions('scissor')"><label for="radio-scissors">Scissors</label>
+                                <input type="radio" name="instrument_subtype" id="radio-chisel" value="BONECHISEL"
+                                    onclick="useTypeOptions('chisel')"><label for="radio-chisel">Bone Chisel</label>
+                                <input type="radio" name="instrument_subtype" id="radio-file" value="BONEFILE"
+                                    onclick="useTypeOptions('file')"><label for="radio-file">Bone File</label>
+                                <input type="radio" name="instrument_subtype" id="radio-curette" value="CURETTE"
+                                    onclick="useTypeOptions('curette')"><label for="radio-curette">Curette</label>
+                            </div>
+
+                            <div id="grasping-subtypes" class="hide-me">
+                                <input type="radio" name="instrument_subtype" id="radio-curve" value="CURVECLAMP"
+                                    onclick="useTypeOptions('curve')"><label for="radio-curve">Curve Clamp</label>
+                                <input type="radio" name="instrument_subtype" id="radio-bone" value="BONEHOLDER"
+                                    onclick="useTypeOptions('bone')"><label for="radio-bone">Bone Holder</label>
+                                <input type="radio" name="instrument_subtype" id="radio-tissue" value="TISSUEELEVATOR"
+                                    onclick="useTypeOptions('elevator')"><label for="radio-tissue">Tissue
+                                    Elevator</label>
+                            </div>
+
+                            <div id="retractor-subtypes" class="hide-me">
+                                <input type="radio" name="instrument_subtype" id="radio-angle" value="ANGLE"
+                                    onclick="useTypeOptions('angle')"><label for="radio-angle">Angle</label>
+                                <input type="radio" name="instrument_subtype" id="radio-self" value="SELFRETAINING"
+                                    onclick="useTypeOptions('self')"><label for="radio-self">Self-Retaining</label>
+                            </div>
+
+                            <div id="impacting-subtypes" class="hide-me">
+                                <input type="radio" name="instrument_subtype" id="radio-mallet" value="MALLET"
+                                    onclick="useTypeOptions('mallet')"><label for="radio-mallet">Mallet</label>
+                            </div>
+
+                            <div id="wire-subtypes" class="hide-me">
+                                <input type="radio" name="instrument_subtype" id="radio-cutter" value="CUTTER"
+                                    onclick="useTypeOptions('cutter')"><label for="radio-cutter">Wire Cutter</label>
+                                <input type="radio" name="instrument_subtype" id="radio-passer" value="PASSER"
+                                    onclick="useTypeOptions('passer')"><label for="radio-passer">Wire Passer</label>
+                                <input type="radio" name="instrument_subtype" id="radio-twister" value="TWISTER"
+                                    onclick="useTypeOptions('twister')"><label for="radio-twister">Wire Twister</label>
+                            </div>
+
+                            <div id="no-subtypes" class="hide-me">
+                                <input type="radio" name="instrument_subtype" id="radio-sub-na" value="N/A"
+                                    onclick="useTypeOptions('none')"><label for="radio-sub-na">N/A</label>
+                            </div>
+
+                        </div>
+
+                        <div id="use-types-section">
+                            <label id="use-type-label">Use Type:</label>
+
+                            <div id="use-type-box">
+                                <!--useDivs[0]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="narrow-use" value="NARROW"
+                                        onclick=""><label for="narrow-use">Narrow</label>
+                                </div>
+
+                                <!--useDivs[1]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="broad-use" value="BROAD"
+                                        onclick=""><label for="broad-use">Broad</label>
+                                </div>
+
+                                <!--useDivs[2]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="skin-use" value="SKIN"
+                                        onclick=""><label for="skin-use">Skin</label>
+                                </div>
+
+                                <!--useDivs[3]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="deep-use" value="DEEP_TISSUE"
+                                        onclick=""><label for="deep-use">Deep Tissue</label>
+                                </div>
+
+                                <!--useDivs[4]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="fabric-use" value="FABRIC"
+                                        onclick=""><label for="fabric-use">Fabric</label>
+                                </div>
+
+                                <!--useDivs[5]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="tissue-use" value="TISSUE"
+                                        onclick=""><label for="tissue-use">Tissue</label>
+                                </div>
+
+                                <!--useDivs[6]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="fix-use" value="FIX_ANGLE"
+                                        onclick=""><label for="fix-use">Fix Angle</label>
+                                </div>
+
+                                <!--useDivs[7]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="arm-use" value="WITH_ARM"
+                                        onclick=""><label for="arm-use">With Arm</label>
+                                </div>
+
+                                <!--useDivs[8]-->
+                                <div id="no-usetypes" class="hide-me">
+                                    <input type="radio" name="instrument_usetype" id="no-use" value="N/A"
+                                        onclick=""><label for="no-use">N/A</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="sizes-section">
+                            <label id="size-label">Size:</label>
+                            <div id="sizes-box">
+
+                                <!--sizeDivs[0]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_size" id="small-size" value="SMALL"
+                                        onclick=""><label for="small-size">Small</label>
+                                </div>
+
+                                <!--sizeDivs[1]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_size" id="medium-size" value="MEDIUM"
+                                        onclick=""><label for="medium-size">Medium</label>
+                                </div>
+
+                                <!--sizeDivs[2]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_size" id="large-size" value="LARGE"
+                                        onclick=""><label for="large-size">Large</label>
+                                </div>
+
+                                <!--sizeDivs[3]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_size" id="short-size" value="SHORT"
+                                        onclick=""><label for="short-size">Short</label>
+                                </div>
+
+                                <!--sizeDivs[4]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_size" id="long-size" value="LONG"
+                                        onclick=""><label for="long-size">Long</label>
+                                </div>
+
+                                <!--sizeDivs[5]-->
+                                <div class="hide-me">
+                                    <input type="radio" name="instrument_size" id="no-size" value="N/A"
+                                        onclick=""><label for="no-size">N/A</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="edit-tab">
+                        <label for="read_id">ID:</label>
+                        <input readonly id="read_id">
+
+                        <label for="edit_name">Name:</label>
+                        <input type="text" id="edit_name">
+
+                        <div class="price-stock-row">
+                            <div>
+                                <label for="edit_price">Price:</label>
+                                <input type="number" id="edit_price" step="0.01" min="0" />
+                            </div>
+                            <div>
+                                <label for="edit_stock">Stock:</label>
+                                <input type="number" id="edit_stock">
+                            </div>
+                            <div>
+                                <label for="edit_stock">Amount Borrowed:</label>
+                                <input readonly id="read_borrowedStock">
+                            </div>
+                        </div>
+
+                        <label for="edit_desc">Description:</label>
+                        <textarea id="edit_desc" maxlength="500"></textarea>
+
+                        <div class="price-stock-row">
+                            <div>
+                                <label for="read_category">Category:</label>
+                                <input readonly id="read_category">
+                            </div>
+                            <div>
+                                <label for="read_type">Type:</label>
+                                <input readonly id="read_type">
+                            </div>
+                            <div>
+                                <label for="read_subtype">Sub-type:</label>
+                                <input readonly id="read_subtype">
+                            </div>
+                        </div>
+
+                        <div class="price-stock-row">
+                            <div>
+                                <label for="read_usetype">Use-type:</label>
+                                <input readonly id="read_usetype">
+                            </div>
+                            <div>
+                                <label for="read_size">Size:</label>
+                                <input readonly id="read_size">
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-delete" data-bs-dismiss="modal"
+                        onclick="clearInputs()">Cancel</button>
+                    <button id="back-btn" type="button" class="btn btn-secondary" onclick="nextPrev(-1)">Back</button>
+                    <button id="next-btn" type="button" class="btn btn-primary" onclick="nextPrev(1)">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="/js/index.js"></script>
+
+</body>
+
+</html>
